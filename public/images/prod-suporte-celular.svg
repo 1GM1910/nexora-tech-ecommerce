@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <radialGradient id="bgGlow4" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#070B14" />
+    </radialGradient>
+    <linearGradient id="aluStand" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgGlow4)" />
+  <!-- Weighted Base -->
+  <ellipse cx="400" cy="435" rx="135" ry="20" fill="#020617" opacity="0.8" />
+  <rect x="290" y="405" width="220" height="24" rx="10" fill="url(#aluStand)" stroke="#475569" stroke-width="2" />
+  <!-- Lower Articulated Arm -->
+  <path d="M375 405 L340 285 L368 278 L405 405 Z" fill="url(#aluStand)" stroke="#475569" stroke-width="2" />
+  <!-- Precision Hinge -->
+  <circle cx="354" cy="282" r="16" fill="#1E293B" stroke="#22D3EE" stroke-width="2.5" />
+  <circle cx="354" cy="282" r="5" fill="#22D3EE" />
+  <!-- Upper Arm & Cradle -->
+  <path d="M354 270 L435 190 L452 206 L368 286 Z" fill="url(#aluStand)" stroke="#475569" stroke-width="2" />
+  <!-- Phone Cradle Plate -->
+  <g transform="rotate(-22 440 215)">
+    <rect x="415" y="120" width="22" height="170" rx="8" fill="#1E293B" stroke="#64748B" stroke-width="2" />
+    <path d="M437 265 L468 265 C475 265 478 258 478 250 L478 238" stroke="#22D3EE" stroke-width="6" stroke-linecap="round" fill="none" />
+  </g>
+  <text x="400" y="510" text-anchor="middle" fill="#64748B" font-family="monospace" font-size="15" letter-spacing="4">SUPORTE ARTICULADO EM ALUMÍNIO</text>
+</svg>

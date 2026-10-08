@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <radialGradient id="bgGlow2" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#070B14" />
+    </radialGradient>
+    <linearGradient id="chargerBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgGlow2)" />
+  <!-- Shadow base -->
+  <ellipse cx="400" cy="440" rx="120" ry="18" fill="#020617" opacity="0.8" />
+  <!-- Prongs (BR Pattern) -->
+  <rect x="355" y="135" width="14" height="55" rx="7" fill="#94A3B8" />
+  <rect x="431" y="135" width="14" height="55" rx="7" fill="#94A3B8" />
+  <rect x="355" y="135" width="14" height="22" rx="7" fill="#CBD5E1" />
+  <rect x="431" y="135" width="14" height="22" rx="7" fill="#CBD5E1" />
+  <!-- Adapter Collar -->
+  <rect x="335" y="185" width="130" height="24" rx="8" fill="#1E293B" stroke="#334155" stroke-width="2" />
+  <!-- Main Charger Block -->
+  <rect x="305" y="205" width="190" height="215" rx="34" fill="url(#chargerBody)" stroke="#334155" stroke-width="2.5" />
+  <!-- USB-C Port Recessed -->
+  <rect x="372" y="362" width="56" height="20" rx="10" fill="#020617" stroke="#22D3EE" stroke-width="2" />
+  <rect x="384" y="370" width="32" height="4" rx="2" fill="#22D3EE" />
+  <!-- Minimalist 20W Engraving -->
+  <text x="400" y="295" text-anchor="middle" fill="#E2E8F0" font-family="sans-serif" font-weight="700" font-size="28" letter-spacing="2">20W</text>
+  <text x="400" y="320" text-anchor="middle" fill="#64748B" font-family="monospace" font-size="12" letter-spacing="3">USB-C PD</text>
+  <text x="400" y="510" text-anchor="middle" fill="#64748B" font-family="monospace" font-size="15" letter-spacing="4">CARREGADOR COMPACTO · 20W</text>
+</svg>

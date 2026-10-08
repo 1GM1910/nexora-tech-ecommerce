@@ -1,0 +1,6 @@
+{
+  "name": "NEXORA TECH — Tecnologia que acompanha você",
+  "description": "Loja virtual demonstrativa de eletrônicos e acessórios tecnológicos desenvolvida como projeto acadêmico do curso de E-commerce do SENAI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
