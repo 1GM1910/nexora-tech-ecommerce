@@ -19,6 +19,7 @@ declare global {
 
 const CONSENT_STORAGE_KEY = 'nexora_cookie_consent_v1';
 const CUSTOM_GA_ID_STORAGE_KEY = 'nexora_custom_ga4_id';
+export const DEFAULT_GA4_MEASUREMENT_ID = 'G-BK849C4BTB';
 
 export type CookieConsentStatus = 'accepted' | 'declined' | 'pending';
 
@@ -35,8 +36,8 @@ export function isValidGA4Id(id?: string | null): boolean {
 }
 
 /**
- * Obtém o ID GA4 configurado via variável de ambiente VITE_GA_MEASUREMENT_ID
- * ou configurado em modo de demonstração acadêmica pelo avaliador.
+ * Obtém o ID GA4 configurado via variável de ambiente VITE_GA_MEASUREMENT_ID,
+ * via substituição opcional no localStorage ou o ID padrão do projeto (G-BK849C4BTB).
  */
 export function getConfiguredGA4Id(): string {
   const envId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
@@ -51,7 +52,7 @@ export function getConfiguredGA4Id(): string {
   } catch {
     // Ignorar falhas de acesso ao localStorage em modo restrito
   }
-  return '';
+  return DEFAULT_GA4_MEASUREMENT_ID;
 }
 
 export function setCustomGA4Id(id: string): void {
@@ -87,13 +88,16 @@ export function setCookieConsent(status: 'accepted' | 'declined'): void {
     // Ignorar erro de storage
   }
   if (status === 'accepted') {
-    initializeGA4IfAllowed();
+    const initialized = initializeGA4IfAllowed();
+    if (initialized && typeof window !== 'undefined') {
+      trackPageView(window.location.pathname + window.location.search, document.title);
+    }
   }
 }
 
 /**
- * Inicializa o script gtag.js apenas se houver consentimento 'accepted' e um ID GA4 válido.
- * send_page_view é desativado na configuração inicial para evitar duplicidade em SPAs.
+ * Inicializa o script gtag.js apenas uma única vez quando houver consentimento 'accepted'
+ * e um ID GA4 válido. send_page_view é desativado na configuração inicial para evitar duplicidade.
  */
 export function initializeGA4IfAllowed(): boolean {
   if (typeof window === 'undefined') return false;
@@ -105,22 +109,27 @@ export function initializeGA4IfAllowed(): boolean {
     return false;
   }
 
-  if (scriptInjectedForId === measurementId && typeof window.gtag === 'function') {
+  const existingScript = document.getElementById('nexora-ga4-script') as HTMLScriptElement | null;
+
+  if (scriptInjectedForId === measurementId && typeof window.gtag === 'function' && existingScript) {
     return true;
   }
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
-  };
+  if (typeof window.gtag !== 'function') {
+    window.gtag = function gtag(...args: unknown[]) {
+      window.dataLayer!.push(args);
+    };
+    window.gtag('js', new Date());
+  }
 
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId, {
-    send_page_view: false,
-    anonymize_ip: true,
-  });
+  if (scriptInjectedForId !== measurementId) {
+    window.gtag('config', measurementId, {
+      send_page_view: false,
+      anonymize_ip: true,
+    });
+  }
 
-  const existingScript = document.getElementById('nexora-ga4-script');
   if (!existingScript) {
     const script = document.createElement('script');
     script.id = 'nexora-ga4-script';

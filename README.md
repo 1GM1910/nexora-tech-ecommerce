@@ -68,7 +68,7 @@ Loja virtual demonstrativa de eletrônicos e acessórios desenvolvida como proje
    ```bash
    cp .env.example .env
    ```
-   Se desejar testar o disparo do Google Analytics 4 via variável de ambiente, informe um ID válido em `VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX` (ou configure diretamente pelo botão **"Configurar Cookies / GA4"** no rodapé da loja).
+   O projeto já vem configurado por padrão com o ID de medição **`G-BK849C4BTB`** (que também pode ser definido via variável `VITE_GA_MEASUREMENT_ID=G-BK849C4BTB` na Vercel ou inspecionado pelo botão **"Configurar Cookies / GA4"** no rodapé da loja).
 
 4. Inicie o servidor de desenvolvimento:
    ```bash
