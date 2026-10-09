@@ -117,16 +117,24 @@ export function initializeGA4IfAllowed(): boolean {
 
   window.dataLayer = window.dataLayer || [];
   if (typeof window.gtag !== 'function') {
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer!.push(args);
+    // CRÍTICO PARA O GTAG.JS:
+    // O processador interno do Google Tag (gtag.js) verifica se cada comando em window.dataLayer
+    // é um objeto `Arguments` (gerado pela palavra-chave `arguments` de uma function tradicional).
+    // Quando se usa `(...args) => window.dataLayer.push(args)`, um Array comum é inserido no dataLayer
+    // e o gtag.js ignora silenciosamente todos os comandos ('js', 'config', 'event'), não gerando requisições g/collect.
+    window.gtag = function () {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer!.push(arguments);
     };
     window.gtag('js', new Date());
   }
 
   if (scriptInjectedForId !== measurementId) {
+    window.gtag('consent', 'update', {
+      analytics_storage: 'granted',
+    });
     window.gtag('config', measurementId, {
       send_page_view: false,
-      anonymize_ip: true,
     });
   }
 
@@ -153,10 +161,13 @@ export function trackPageView(path: string, title?: string): void {
   if (!canDispatchAnalytics()) return;
   if (lastTrackedPagePath === path) return;
 
+  const measurementId = getConfiguredGA4Id();
   lastTrackedPagePath = path;
   window.gtag!('event', 'page_view', {
+    send_to: measurementId,
     page_path: path,
     page_title: title || document.title,
+    page_location: typeof window !== 'undefined' ? window.location.href : undefined,
   });
 }
 
@@ -178,7 +189,9 @@ function mapProductToGAItem(product: Product, quantity = 1, index?: number) {
 export function trackViewItemList(products: Product[], listName = 'Catálogo Nexora Tech'): void {
   if (!canDispatchAnalytics() || products.length === 0) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'view_item_list', {
+    send_to: measurementId,
     item_list_id: listName.toLowerCase().replace(/\s+/g, '_'),
     item_list_name: listName,
     items: products.map((p, idx) => mapProductToGAItem(p, 1, idx)),
@@ -191,7 +204,9 @@ export function trackViewItemList(products: Product[], listName = 'Catálogo Nex
 export function trackSelectItem(product: Product, listName = 'Catálogo Nexora Tech'): void {
   if (!canDispatchAnalytics()) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'select_item', {
+    send_to: measurementId,
     item_list_id: listName.toLowerCase().replace(/\s+/g, '_'),
     item_list_name: listName,
     items: [mapProductToGAItem(product, 1)],
@@ -204,7 +219,9 @@ export function trackSelectItem(product: Product, listName = 'Catálogo Nexora T
 export function trackViewItem(product: Product): void {
   if (!canDispatchAnalytics()) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'view_item', {
+    send_to: measurementId,
     currency: 'BRL',
     value: Number(product.price.toFixed(2)),
     items: [mapProductToGAItem(product, 1)],
@@ -217,7 +234,9 @@ export function trackViewItem(product: Product): void {
 export function trackAddToCart(product: Product, quantity = 1): void {
   if (!canDispatchAnalytics()) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'add_to_cart', {
+    send_to: measurementId,
     currency: 'BRL',
     value: Number((product.price * quantity).toFixed(2)),
     items: [mapProductToGAItem(product, quantity)],
@@ -230,7 +249,9 @@ export function trackAddToCart(product: Product, quantity = 1): void {
 export function trackRemoveFromCart(product: Product, quantity = 1): void {
   if (!canDispatchAnalytics()) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'remove_from_cart', {
+    send_to: measurementId,
     currency: 'BRL',
     value: Number((product.price * quantity).toFixed(2)),
     items: [mapProductToGAItem(product, quantity)],
@@ -244,7 +265,9 @@ export function trackRemoveFromCart(product: Product, quantity = 1): void {
 export function trackBeginCheckout(cartItems: CartItem[], totalValue: number): void {
   if (!canDispatchAnalytics() || cartItems.length === 0) return;
 
+  const measurementId = getConfiguredGA4Id();
   window.gtag!('event', 'begin_checkout', {
+    send_to: measurementId,
     currency: 'BRL',
     value: Number(totalValue.toFixed(2)),
     items: cartItems.map((item, idx) => mapProductToGAItem(item.product, item.quantity, idx)),
