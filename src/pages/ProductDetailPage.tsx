@@ -115,9 +115,9 @@ export const ProductDetailPage: React.FC = () => {
           <div className="aspect-[4/3] w-full rounded-2xl bg-[#090E1A] border border-slate-800 overflow-hidden">
             <ProductImage
               src={product.image}
-              alt={`${product.name} — ${product.category}`}
+              alt={`Fotografia em destaque de ${product.name} (${product.category}) — ${product.shortDescription}`}
               category={product.category}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-[#090E1A]"
             />
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Headphones, Smartphone, Watch, Cable, Package } from 'lucide-react';
 import { ProductCategory } from '../types/product';
 
@@ -13,9 +13,13 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   src,
   alt,
   category,
-  className = 'w-full h-full object-cover',
+  className = 'w-full h-full object-contain bg-[#090E1A]',
 }) => {
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
 
   const renderFallbackIcon = () => {
     switch (category) {
@@ -55,6 +59,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       alt={alt}
       referrerPolicy="no-referrer"
       loading="lazy"
+      decoding="async"
       onError={() => setHasError(true)}
       className={className}
     />

@@ -40,6 +40,7 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
 
   const [errors, setErrors] = useState<Partial<Record<keyof DemoCheckoutData, string>>>({});
   const [isSimulating, setIsSimulating] = useState(false);
+  const [stripeApiError, setStripeApiError] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     const nextErrors: Partial<Record<keyof DemoCheckoutData, string>> = {};
@@ -79,18 +80,21 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setStripeApiError(null);
     if (errors[name as keyof DemoCheckoutData]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  /**
+   * Executa a simulação local demonstrativa (sem comunicar nem afirmar aprovação pelo Stripe).
+   */
+  const runLocalDemoSimulation = () => {
     if (!validateForm() || items.length === 0) return;
 
+    setStripeApiError(null);
     setIsSimulating(true);
 
-    // Simula o tempo de criação de uma sessão de checkout demonstrativa
     setTimeout(() => {
       const randomSuffix = Math.floor(100000 + Math.random() * 900000);
       const receipt: DemoOrderReceipt = {
@@ -108,6 +112,63 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
     }, 550);
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm() || items.length === 0) return;
+
+    setStripeApiError(null);
+
+    // Se o usuário escolheu PIX Demonstrativo, executa o fluxo demonstrativo local
+    if (formData.paymentMethod === 'pix_demo') {
+      runLocalDemoSimulation();
+      return;
+    }
+
+    // Modalidade Stripe Checkout (Sandbox): solicita criação da sessão exclusivamente no servidor
+    setIsSimulating(true);
+    try {
+      const payload = {
+        items: items.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+      };
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(
+          'O endpoint /api/create-checkout-session não respondeu em JSON neste ambiente (funções serverless ativas no deploy da Vercel).'
+        );
+      }
+
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !data.url) {
+        throw new Error(
+          data.error || 'Não foi possível iniciar a sessão de testes no Stripe Checkout.'
+        );
+      }
+
+      // Redireciona para o ambiente seguro hospedado pelo Stripe (Test Mode)
+      window.location.assign(data.url);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Serviço Stripe Checkout indisponível no momento.';
+      setStripeApiError(message);
+      setIsSimulating(false);
+    }
+  };
+
   return (
     <div className="bg-[#0F172A] border border-slate-800 rounded-xl p-6 sm:p-8">
       {/* Test Mode Explicit Banner */}
@@ -115,12 +176,12 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
         <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
         <div className="text-xs text-amber-200/90 space-y-1 leading-relaxed">
           <p className="font-semibold text-amber-300">
-            Ambiente de Demonstração (Modo de Teste)
+            Ambiente de Demonstração (Modo de Teste / Sandbox)
           </p>
           <p>
-            Este módulo simula a etapa de checkout e está isolado para futura conexão via backend com o{' '}
-            <strong>Stripe Checkout (Test Mode)</strong>. Nenhuma cobrança financeira real será efetuada e
-            nenhum dado de cartão bancário é solicitado nesta tela.
+            Este módulo integra o <strong>Stripe Checkout (Sandbox)</strong> via função serverless{' '}
+            <code className="text-amber-200">/api/create-checkout-session</code> e também mantém a{' '}
+            <strong>Simulação Local</strong> disponível. Nenhuma cobrança financeira real é efetuada.
           </p>
         </div>
       </div>
@@ -289,12 +350,12 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-white">
-                    Stripe Checkout Hosted (Simulação Modo de Teste)
+                    Stripe Checkout Hosted (Sandbox / Modo de Teste)
                   </span>
                   <CreditCard className="w-4 h-4 text-cyan-400" aria-hidden="true" />
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Arquitetura preparada para redirecionar a uma sessão segura Stripe Checkout em versões com backend. Nesta versão estática, gera um protocolo demonstrativo sem transação real.
+                  Cria uma sessão de pagamento no servidor (<code className="text-slate-300">/api/create-checkout-session</code>) validando catálogo e estoque no backend, e redireciona ao ambiente de testes da Stripe em BRL.
                 </p>
               </div>
             </label>
@@ -317,17 +378,45 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-white">
-                    PIX Demonstrativo (Sem valor financeiro)
+                    Simulação Local Instantânea / PIX Demonstrativo (Sem servidor externo)
                   </span>
                   <CheckCircle2 className="w-4 h-4 text-cyan-400" aria-hidden="true" />
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Simula um pedido instantâneo para apresentação do fluxo de compra no curso do SENAI.
+                  Gera imediatamente um protocolo demonstrativo local para apresentação do fluxo de compra no curso do SENAI, sem depender de chave Stripe.
                 </p>
               </div>
             </label>
           </div>
         </div>
+
+        {/* Explicit Error + Fallback Choice when Stripe API is unavailable */}
+        {stripeApiError && (
+          <div
+            role="alert"
+            className="p-4 rounded-xl bg-rose-950/50 border border-rose-500/40 space-y-3"
+          >
+            <div className="flex items-start gap-2.5 text-xs text-rose-200 leading-relaxed">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-rose-300">
+                  Não foi possível iniciar o Stripe Checkout (Sandbox)
+                </p>
+                <p className="mt-1">{stripeApiError}</p>
+              </div>
+            </div>
+            <div className="pt-1 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={runLocalDemoSimulation}
+                disabled={isSimulating}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 border border-slate-600 text-white hover:bg-slate-700 transition-colors cursor-pointer"
+              >
+                Concluir via Simulação Local Demonstrativa (Sem Stripe)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Submit */}
         <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -343,8 +432,12 @@ export const StripeTestCheckoutModule: React.FC<StripeTestCheckoutModuleProps> =
           >
             <span>
               {isSimulating
-                ? 'Gerando simulação...'
-                : `Registrar Pedido Demonstrativo (${formatCurrencyBRL(total)})`}
+                ? formData.paymentMethod === 'stripe_test_card'
+                  ? 'Conectando ao Stripe Sandbox...'
+                  : 'Gerando simulação local...'
+                : formData.paymentMethod === 'stripe_test_card'
+                ? `Pagar no Stripe Sandbox (${formatCurrencyBRL(total)})`
+                : `Registrar Simulação Local (${formatCurrencyBRL(total)})`}
             </span>
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>

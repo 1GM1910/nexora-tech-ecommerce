@@ -95,9 +95,9 @@ npm run preview
 
 ---
 
-## Como Publicar na Vercel (Deploy Estático)
+## Como Publicar na Vercel (Frontend + Serverless Functions `/api`)
 
-O projeto já inclui o arquivo `vercel.json` configurado para suportar todas as rotas do React Router (`/` , `/catalogo`, `/produto/:id`, `/carrinho`, `/checkout`, `/sobre`, `/contato`).
+O projeto inclui o arquivo `vercel.json` configurado para preservar as funções serverless em `/api/*` e encaminhar as demais rotas para o React Router (`/`, `/catalogo`, `/produto/:id`, `/carrinho`, `/checkout`, `/sobre`, `/contato`).
 
 1. Suba o projeto para um repositório no **GitHub**.
 2. Acesse [vercel.com](https://vercel.com/) e clique em **Add New... → Project**.
@@ -106,8 +106,20 @@ O projeto já inclui o arquivo `vercel.json` configurado para suportar todas as 
    - **Framework Preset**: `Vite`
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-5. *(Opcional)* Em **Environment Variables**, adicione `VITE_GA_MEASUREMENT_ID` caso possua uma propriedade GA4 de testes.
+5. Em **Environment Variables** no painel da Vercel, configure:
+   - `VITE_GA_MEASUREMENT_ID`: `G-BK849C4BTB` (opcional, já definido como padrão).
+   - `STRIPE_SECRET_KEY`: sua chave secreta de **Modo de Teste** da Stripe (deve obrigatoriamente iniciar com `sk_test_...`). **Nunca** adicione o prefixo `VITE_` a esta variável.
+   - `STRIPE_WEBHOOK_SECRET`: segredo de assinatura do endpoint de webhook da Stripe (iniciado com `whsec_...`).
 6. Clique em **Deploy**.
+
+---
+
+## Configuração do Stripe Checkout (Sandbox) e Webhook
+
+### 1. Funções Serverless criadas em `/api`
+- `POST /api/create-checkout-session`: Recebe apenas `{ items: [{ productId, quantity }] }`, valida existência e limite de estoque contra o catálogo oficial do servidor (`src/data/products.ts`), aplica a mesma regra de frete demonstrativo em centavos de BRL (`R$ 0,00` se subtotal $\ge \text{R\$ } 199,00$, ou `R$ 18,90` caso contrário) e cria a sessão no Stripe Test Mode.
+- `GET /api/checkout-session`: Verifica diretamente na API da Stripe o status real da sessão (`cs_test_...`) no retorno para `/checkout?stripe_status=success&session_id=...`, evitando aprovações falsas baseadas apenas em query string e sem expor dados pessoais do comprador.
+- `POST /api/stripe-webhook`: Lê o corpo bruto (`rawBody`), valida a assinatura criptográfica `stripe-signature` com `STRIPE_WEBHOOK_SECRET` e responde aos eventos de teste sem efeitos colaterais irreversíveis (uma vez que esta versão acadêmica não possui banco de dados persistente).
 
 ---
 

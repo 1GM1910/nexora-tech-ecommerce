@@ -55,9 +55,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         <ProductImage
           src={product.image}
-          alt={`${product.name} — ${product.category}`}
+          alt={`Fotografia ilustrativa de ${product.name} (${product.category}) — ${product.shortDescription}`}
           category={product.category}
-          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+          className={`w-full h-full object-contain bg-[#090E1A] transition-transform duration-300 group-hover:scale-105 ${
             isOutOfStock ? 'opacity-50 grayscale-[40%]' : ''
           }`}
         />
